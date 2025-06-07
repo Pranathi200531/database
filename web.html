@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login & Signup with Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .container {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .message {
+            margin-top: 10px;
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Firebase Login & Signup</h2>
+
+    <div class="container">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button onclick="signup()">Sign Up</button>
+        <button onclick="login()">Login</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <h2>Application Form</h2>
+
+    <div class="container">
+        <input type="text" id="appName" placeholder="Full Name" required />
+        <input type="email" id="appEmail" placeholder="Email" required />
+        <input type="tel" id="appPhone" placeholder="Phone Number" required />
+        <textarea id="appMessage" placeholder="Your message" rows="4"
+            style="width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box;"></textarea>
+        <button onclick="submitApplication()">Submit Application</button>
+        <div class="appMessage" id="appMessageStatus"></div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+        // Firebase config (project: web-project-d28fd)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSkysofWYBVXZe_zoZWlbuvN7NR7fTxmY",
+            authDomain: "web-app-dff58.firebaseapp.com",
+            databaseURL: "https://web-app-dff58-default-rtdb.firebaseio.com",
+            projectId: "web-app-dff58",
+            storageBucket: "web-app-dff58.firebasestorage.app",
+            messagingSenderId: "171389602846",
+            appId: "1:171389602846:web:c96a478b93fc80e1b7720f",
+            measurementId: "G-GRQWN06M2D"
+        }
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Sign up function
+        window.signup = async function () {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                message.style.color = "green";
+                message.textContent = "Signup successful!";
+            } catch (error) {
+                message.style.color = "red";
+                message.textContent = error.message;
+            }
+        };
+
+        // Login function
+        window.login = async function () {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                message.style.color = "green";
+                message.textContent = "Login successful!";
+            } catch (error) {
+                message.style.color = "red";
+                message.textContent = error.message;
+            }
+        };
+
+        // Submit application function
+        window.submitApplication = async function () {
+            const name = document.getElementById("appName").value;
+            const email = document.getElementById("appEmail").value;
+            const phone = document.getElementById("appPhone").value;
+            const message = document.getElementById("appMessage").value;
+            const status = document.getElementById("appMessageStatus");
+
+            if (!name || !email || !phone) {
+                status.style.color = "red";
+                status.textContent = "Please fill in all required fields.";
+                return;
+            }
+
+            try {
+                const applicationsRef = ref(database, 'applications');
+                const newApplicationRef = push(applicationsRef);
+                await set(newApplicationRef, {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    message: message,
+                    timestamp: Date.now()
+                });
+                status.style.color = "green";
+                status.textContent = "Application submitted successfully!";
+                // Clear form
+                document.getElementById("appName").value = "";
+                document.getElementById("appEmail").value = "";
+                document.getElementById("appPhone").value = "";
+                document.getElementById("appMessage").value = "";
+            } catch (error) {
+                status.style.color = "red";
+                status.textContent = error.message;
+            }
+        };
+    </script>
+
+</body>
+
+</html>
